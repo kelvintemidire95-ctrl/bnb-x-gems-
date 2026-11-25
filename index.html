@@ -1,0 +1,590 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080d18">
+<title>BNB X GEMS</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d18;color:#f2f5ff;font-family:Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer;border:0}
+.app{max-width:520px;margin:auto;padding:16px 14px 100px}
+.header{display:flex;justify-content:space-between;align-items:center;margin:10px 0 22px}
+.logo{font-weight:900;font-size:20px;color:#f4c542}
+.pill{background:#17243a;padding:8px 12px;border-radius:30px;color:#a8c7ff;font-size:12px}
+.card{background:#111a2b;border:1px solid #23334c;border-radius:18px;padding:17px;margin-bottom:14px}
+.balance{background:linear-gradient(135deg,#162d52,#12203a)}
+.muted{color:#95a5bf;font-size:13px}
+.big{font-size:30px;font-weight:bold;margin:10px 0}
+h2{font-size:17px;margin:0 0 14px}
+h3{font-size:15px;margin:8px 0}
+button.primary{background:#f4c542;color:#101725;font-weight:bold;border-radius:12px;padding:13px;width:100%}
+button.secondary{background:#22344f;color:white;border-radius:12px;padding:12px;width:100%}
+button.danger{background:#8c3341;color:white;border-radius:12px;padding:12px;width:100%}
+button:disabled{opacity:.5}
+input{width:100%;padding:13px;background:#0b1321;color:white;border:1px solid #30415c;border-radius:12px;margin:7px 0 12px;outline:none}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#0c1422;border-top:1px solid #24334b;display:flex;justify-content:center;padding:8px;z-index:5}
+.navinner{max-width:520px;width:100%;display:flex;justify-content:space-around}
+.nav button{background:transparent;color:#9aabc6;padding:9px 5px;font-size:11px}
+.nav button.active{color:#f4c542}
+.section{display:none}
+.section.active{display:block}
+.task{border:1px solid #293951;border-radius:14px;padding:13px;margin:10px 0}
+.task p{font-size:13px;color:#a8b5ca}
+.notice{padding:13px;border-radius:12px;background:#19283f;color:#c9dcff;font-size:13px;margin-bottom:12px}
+.error{background:#3a1722;color:#ffb8c1;padding:15px;border-radius:12px;margin:12px 0;white-space:pre-wrap;word-break:break-word}
+.success{background:#123328;color:#8ff0bc;padding:12px;border-radius:12px;margin:10px 0}
+.loading{position:fixed;inset:0;background:#080d18;display:flex;align-items:center;justify-content:center;z-index:20;padding:24px;text-align:center}
+.spinner{width:32px;height:32px;border:3px solid #26364c;border-top-color:#f4c542;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 15px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.small{font-size:12px}
+.listitem{padding:12px;border-bottom:1px solid #25334a;font-size:13px}
+a{color:#f4c542}
+</style>
+</head>
+
+<body>
+<div id="loading" class="loading">
+  <div>
+    <div class="spinner"></div>
+    <h3 id="loadingText">Connecting to BNB X GEMS...</h3>
+    <div class="muted" id="loadingDetail">Please wait</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
+<header class="header">
+  <div class="logo">💎 BNB X GEMS</div>
+  <div class="pill" id="userTag">Loading user...</div>
+</header>
+
+<div id="message"></div>
+
+<section class="section active" id="home">
+  <div class="card balance">
+    <div class="muted">Your balance</div>
+    <div class="big" id="balance">0</div>
+    <div class="muted">GEMS</div>
+    <div class="row" style="margin-top:18px">
+      <button class="primary" onclick="showSection('withdraw')">Withdraw</button>
+      <button class="secondary" onclick="refresh()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="muted">Referrals</div>
+      <div class="big" id="refCount">0</div>
+    </div>
+    <div class="card">
+      <div class="muted">Withdrawn</div>
+      <div class="big" id="withdrawn">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Welcome to BNB X GEMS</h2>
+    <p class="muted">Complete available tasks, invite friends and earn rewards.</p>
+    <button class="primary" onclick="showSection('tasks')">Explore Tasks</button>
+  </div>
+
+  <div class="card">
+    <h2>Daily Bonus</h2>
+    <p class="muted">Check whether a daily bonus is available on your account.</p>
+    <button class="secondary" onclick="dailyBonus()">Claim Daily Bonus</button>
+  </div>
+</section>
+
+<section class="section" id="tasks">
+  <div class="card">
+    <h2>Available Tasks</h2>
+    <div id="tasksList">Loading tasks...</div>
+  </div>
+</section>
+
+<section class="section" id="referrals">
+  <div class="card">
+    <h2>Invite Friends</h2>
+    <p class="muted">Invite friends using your personal referral link.</p>
+    <input id="refLink" readonly placeholder="Your referral link">
+    <button class="primary" onclick="copyReferral()">Copy Referral Link</button>
+    <div style="margin-top:18px">
+      <div class="muted">Your referrals</div>
+      <div class="big" id="refCount2">0</div>
+    </div>
+    <div id="refList"></div>
+  </div>
+</section>
+
+<section class="section" id="wallet">
+  <div class="card">
+    <h2>Wallet Settings</h2>
+    <p class="muted">Enter your BNB Smart Chain wallet address.</p>
+    <input id="walletInput" placeholder="0x...">
+    <button class="primary" onclick="saveWallet()">Save Wallet</button>
+  </div>
+</section>
+
+<section class="section" id="withdraw">
+  <div class="card">
+    <h2>Withdraw GEMS</h2>
+    <p class="muted">Withdrawals are processed manually by the admin.</p>
+    <div class="notice">Make sure your wallet address is correct before submitting.</div>
+    <div class="muted">Available balance</div>
+    <div class="big" id="withdrawBalance">0</div>
+    <label>Withdrawal amount</label>
+    <input id="withdrawAmount" type="number" min="1" placeholder="Enter amount">
+    <label>Wallet address</label>
+    <input id="withdrawWallet" placeholder="0x...">
+    <button class="primary" onclick="requestWithdrawal()">Submit Withdrawal</button>
+  </div>
+
+  <div class="card">
+    <h2>Withdrawal History</h2>
+    <div id="withdrawHistory">Loading...</div>
+  </div>
+</section>
+
+<section class="section" id="admin">
+  <div class="card">
+    <h2>Admin Panel</h2>
+    <button class="secondary" onclick="loadAdmin()">Refresh Admin Data</button>
+    <div id="adminData" class="muted" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Create Task</h2>
+    <input id="newTaskTitle" placeholder="Task description">
+    <input id="newTaskLink" placeholder="Task link">
+    <input id="newTaskReward" type="number" placeholder="Reward">
+    <button class="primary" onclick="createTask()">Create Task</button>
+  </div>
+
+  <div class="card">
+    <h2>Withdrawal Requests</h2>
+    <div id="adminWithdrawals">Loading...</div>
+  </div>
+
+  <div class="card">
+    <h2>Set Referral Reward</h2>
+    <input id="bonusAmount" type="number" placeholder="Reward amount">
+    <button class="primary" onclick="setBonus()">Save Reward</button>
+  </div>
+</section>
+
+<section class="section" id="settings">
+  <div class="card">
+    <h2>Settings</h2>
+    <div id="settingsInfo" class="muted">BNB X GEMS</div>
+    <button class="secondary" onclick="refresh()">Reconnect / Refresh</button>
+  </div>
+</section>
+</div>
+
+<div class="nav" id="nav" style="display:none">
+  <div class="navinner">
+    <button class="active" onclick="showSection('home',this)">🏠<br>Home</button>
+    <button onclick="showSection('tasks',this)">📋<br>Tasks</button>
+    <button onclick="showSection('referrals',this)">👥<br>Friends</button>
+    <button onclick="showSection('wallet',this)">👛<br>Wallet</button>
+    <button onclick="showSection('withdraw',this)">💸<br>Withdraw</button>
+    <button id="adminNav" style="display:none" onclick="showSection('admin',this)">⚙️<br>Admin</button>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const API = "https://bnb-x-gems-api.onrender.com";
+const tg = window.Telegram?.WebApp;
+
+let me = null;
+let userData = {};
+let isAdmin = false;
+
+/* =============== TELEGRAM INIT =============== */
+if (tg) {
+  try {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor("#080d18");
+    tg.setBackgroundColor("#080d18");
+  } catch(e) {}
+}
+
+function showLoading(text, detail="") {
+  document.getElementById("loading").style.display="flex";
+  document.getElementById("loadingText").textContent=text;
+  document.getElementById("loadingDetail").textContent=detail;
+}
+
+function hideLoading() {
+  document.getElementById("loading").style.display="none";
+}
+
+function showError(error) {
+  hideLoading();
+  document.getElementById("app").style.display="block";
+  document.getElementById("nav").style.display="flex";
+  document.getElementById("message").innerHTML=
+    `<div class="error"><b>Connection failed</b><br>${escapeHtml(error)}<br><br>
+    <button class="secondary" onclick="refresh()">Try Again</button></div>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+/* =============== API =============== */
+async function api(path, options={}) {
+  if (!tg || !tg.initData) {
+    throw new Error("Telegram authentication data is missing. Open this Mini App from the Telegram bot's menu button.");
+  }
+
+  const headers = {
+    "Content-Type":"application/json",
+    "X-Telegram-Init-Data":tg.initData,
+    ...(options.headers||{})
+  };
+
+  let response;
+  try {
+    response = await fetch(API+path, {
+      ...options,
+      headers,
+      cache:"no-store"
+    });
+  } catch(e) {
+    throw new Error("Cannot reach backend. The Render server may be waking up, or the network connection failed.");
+  }
+
+  const text = await response.text();
+  let data;
+
+  try { data = text ? JSON.parse(text) : {}; }
+  catch(e) { data = {message:text}; }
+
+  if (!response.ok) {
+    throw new Error(data.error || data.message || `Server error ${response.status}`);
+  }
+
+  if (data && data.success === false) {
+    throw new Error(data.error || data.message || "Request failed");
+  }
+
+  return data;
+}
+
+function unwrap(data) {
+  return data?.data ?? data?.user ?? data;
+}
+
+function num(...values) {
+  for (const v of values) {
+    if (v !== undefined && v !== null && !isNaN(Number(v))) return Number(v);
+  }
+  return 0;
+}
+
+/* =============== STARTUP =============== */
+async function startApp() {
+  showLoading("Connecting to BNB X GEMS...", "Authenticating Telegram");
+
+  if (!tg) {
+    showError("This page is not running inside Telegram. Open BNB X GEMS from your Telegram bot.");
+    return;
+  }
+
+  if (!tg.initData) {
+    showError("Telegram did not provide initData. Open the Mini App using the bot's actual Mini App button, not a normal website link.");
+    return;
+  }
+
+  try {
+    // Prevent permanent loading if Render is waking up
+    const timeout = new AbortController();
+    const timer = setTimeout(()=>timeout.abort(), 25000);
+
+    const response = await fetch(API+"/api/me", {
+      method:"GET",
+      headers:{
+        "X-Telegram-Init-Data":tg.initData,
+        "Content-Type":"application/json"
+      },
+      signal:timeout.signal,
+      cache:"no-store"
+    });
+
+    clearTimeout(timer);
+
+    const raw = await response.text();
+    let data;
+    try { data=JSON.parse(raw); }
+    catch(e) { throw new Error("Backend returned an invalid response: "+raw.slice(0,150)); }
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "HTTP "+response.status);
+    }
+
+    if (data.success === false) {
+      throw new Error(data.error || "Authentication failed");
+    }
+
+    userData=unwrap(data);
+    me=userData;
+
+    const telegramUser=tg.initDataUnsafe?.user || {};
+    isAdmin=!!(userData.isAdmin || userData.admin || data.isAdmin);
+
+    document.getElementById("userTag").textContent=
+      telegramUser.username ? "@"+telegramUser.username :
+      telegramUser.first_name || "Telegram User";
+
+    document.getElementById("app").style.display="block";
+    document.getElementById("nav").style.display="flex";
+    hideLoading();
+
+    renderUser();
+    await Promise.allSettled([
+      loadTasks(),
+      loadReferrals(),
+      loadWallet(),
+      loadWithdrawals()
+    ]);
+
+    if (isAdmin) {
+      document.getElementById("adminNav").style.display="block";
+    }
+
+    document.getElementById("message").innerHTML="";
+  } catch(e) {
+    showError(e.name==="AbortError" ? "The backend took too long to respond. Try again." : e.message);
+  }
+}
+
+/* =============== USER DASHBOARD =============== */
+function renderUser() {
+  const balance=num(userData.balance,userData.coins,userData.gems);
+  const referrals=num(userData.referrals,userData.referralCount,userData.totalReferrals);
+  const withdrawn=num(userData.totalWithdrawn,userData.withdrawn);
+
+  document.getElementById("balance").textContent=balance.toLocaleString();
+  document.getElementById("withdrawBalance").textContent=balance.toLocaleString();
+  document.getElementById("refCount").textContent=referrals;
+  document.getElementById("refCount2").textContent=referrals;
+  document.getElementById("withdrawn").textContent=withdrawn.toLocaleString();
+
+  if(userData.wallet) {
+    document.getElementById("walletInput").value=userData.wallet;
+    document.getElementById("withdrawWallet").value=userData.wallet;
+  }
+
+  document.getElementById("settingsInfo").textContent=
+    "Account ID: "+(tg.initDataUnsafe?.user?.id || "Telegram");
+}
+
+/* =============== NAVIGATION =============== */
+function showSection(id,button) {
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id)?.classList.add("active");
+
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(button) button.classList.add("active");
+
+  if(id==="tasks") loadTasks();
+  if(id==="referrals") loadReferrals();
+  if(id==="withdraw") loadWithdrawals();
+  if(id==="admin" && isAdmin) loadAdmin();
+}
+
+/* =============== TASKS =============== */
+async function loadTasks() {
+  const box=document.getElementById("tasksList");
+  box.innerHTML="Loading tasks...";
+
+  try {
+    const data=await api("/api/tasks");
+    const tasks=data.tasks || data.data?.tasks || (Array.isArray(data)?data:[]);
+
+    if(!tasks.length) {
+      box.innerHTML='<div class="muted">No tasks available right now.</div>';
+      return;
+    }
+
+    box.innerHTML=tasks.map((t,i)=>{
+      const id=t.id ?? t._id ?? i;
+      const title=t.title || t.description || t.name || "Task";
+      const reward=num(t.reward,t.amount);
+      const link=t.link || t.url || "#";
+      const completed=t.completed || t.claimed || t.done;
+
+      return `<div class="task">
+        <h3>${escapeHtml(title)}</h3>
+        <p>Reward: ${reward} GEMS</p>
+        ${completed?'<div class="success">Completed ✓</div>':''}
+        <div class="row">
+          <button class="secondary" onclick="openTask('${escapeHtml(link)}')">Open Task</button>
+          <button class="primary" ${completed?'disabled':''} onclick="claimTask('${escapeHtml(id)}')">Claim</button>
+        </div>
+      </div>`;
+    }).join("");
+  } catch(e) {
+    box.innerHTML=`<div class="error">${escapeHtml(e.message)}</div><button class="secondary" onclick="loadTasks()">Retry</button>`;
+  }
+}
+
+function openTask(url) {
+  if(url && url!=="#") {
+    if(tg) tg.openLink(url);
+    else window.open(url,"_blank");
+  }
+}
+
+async function claimTask(id) {
+  try {
+    const result=await api("/api/tasks/"+encodeURIComponent(id)+"/claim",{method:"POST",body:JSON.stringify({})});
+    showMessage(result.message || "Task claim submitted","success");
+    await refresh();
+    await loadTasks();
+  } catch(e) {
+    showMessage(e.message,"error");
+  }
+}
+
+/* =============== REFERRALS =============== */
+async function loadReferrals() {
+  try {
+    const data=await api("/api/referrals");
+    const refs=data.referrals || data.data?.referrals || [];
+    const count=num(data.count,data.total,refs.length,userData.referrals);
+
+    document.getElementById("refCount2").textContent=count;
+    document.getElementById("refCount").textContent=count;
+
+    const username=data.botUsername || data.username || data.bot?.username ||
+      userData.botUsername || "";
+
+    const uid=tg.initDataUnsafe?.user?.id;
+    if(username && uid) {
+      document.getElementById("refLink").value=`https://t.me/${username}?start=${uid}`;
+    } else {
+      document.getElementById("refLink").value="Referral link is not available yet";
+    }
+
+    document.getElementById("refList").innerHTML=refs.length
+      ? refs.map(r=>`<div class="listitem">${escapeHtml(r.username || r.name || r.id || "Referral")}</div>`).join("")
+      :'<p class="muted">Your invited friends will appear here.</p>';
+  } catch(e) {
+    document.getElementById("refList").innerHTML=`<div class="muted">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function copyReferral() {
+  const input=document.getElementById("refLink");
+  if(!input.value.startsWith("https://")) {
+    showMessage("Referral link is not ready yet.","error");
+    return;
+  }
+  input.select();
+  if(tg && tg.clipboard) tg.clipboard.writeText(input.value);
+  else navigator.clipboard.writeText(input.value);
+  showMessage("Referral link copied!","success");
+}
+
+/* =============== WALLET =============== */
+async function loadWallet() {
+  try {
+    const data=await api("/api/wallet");
+    const wallet=data.wallet || data.data?.wallet || userData.wallet;
+    if(wallet) {
+      document.getElementById("walletInput").value=wallet;
+      document.getElementById("withdrawWallet").value=wallet;
+    }
+  } catch(e) {}
+}
+
+async function saveWallet() {
+  const wallet=document.getElementById("walletInput").value.trim();
+
+  if(!/^0x[a-fA-F0-9]{40}$/.test(wallet)) {
+    showMessage("Enter a valid BNB Smart Chain wallet address.","error");
+    return;
+  }
+
+  try {
+    const result=await api("/api/wallet",{
+      method:"POST",
+      body:JSON.stringify({wallet,address:wallet})
+    });
+    userData.wallet=wallet;
+    document.getElementById("withdrawWallet").value=wallet;
+    showMessage(result.message || "Wallet saved successfully!","success");
+  } catch(e) {
+    showMessage(e.message,"error");
+  }
+}
+
+/* =============== WITHDRAWALS =============== */
+async function requestWithdrawal() {
+  const amount=Number(document.getElementById("withdrawAmount").value);
+  const wallet=document.getElementById("withdrawWallet").value.trim();
+
+  if(!amount || amount<=0) {
+    showMessage("Enter a valid withdrawal amount.","error");
+    return;
+  }
+  if(!/^0x[a-fA-F0-9]{40}$/.test(wallet)) {
+    showMessage("Enter a valid BNB wallet address.","error");
+    return;
+  }
+
+  if(amount>num(userData.balance,userData.coins,userData.gems)) {
+    showMessage("Insufficient balance.","error");
+    return;
+  }
+
+  try {
+    const result=await api("/api/withdraw",{
+      method:"POST",
+      body:JSON.stringify({amount,wallet,address:wallet})
+    });
+    document.getElementById("withdrawAmount").value="";
+    showMessage(result.message || "Withdrawal request submitted.","success");
+    await refresh();
+    await loadWithdrawals();
+  } catch(e) {
+    showMessage(e.message,"error");
+  }
+}
+
+async function loadWithdrawals() {
+  const box=document.getElementById("withdrawHistory");
+  box.innerHTML="Loading...";
+
+  try {
+    const data=await api("/api/withdrawals");
+    const list=data.withdrawals || data.data?.withdrawals || [];
+
+    box.innerHTML=list.length ? list.map(w=>`
+      <div class="listitem">
+        <b>${num(w.amount)} GEMS</b><br>
+        <span class="muted">Status: ${escapeHtml(w.status || "Pending")}</span><br>
+        <span class="muted small">${escapeHtml(w.wallet || w.address || "")}</span>
+      </div>`).join("") : '<p class="muted">No withdrawal history yet.</p>';
+  } catch(e) {
+    box.innerHTML=`<div class="muted">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+/* =============== ADMIN =============== */
+async function loadAdmin() {
+  if(!isAdmin) return;
+  document.getElementById("adminData").textCont

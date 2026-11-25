@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#080d19">
+<title>BNB X GEMS</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#080d19;--panel:#111a2b;--panel2:#172238;--gold:#f5bd45;--text:#f5f7ff;--muted:#93a0b8;--green:#39d99b;--red:#ff6878}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;padding-bottom:90px}
+button,input{font:inherit}
+button{cursor:pointer;border:0}
+.header{padding:22px 18px 12px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:19px;font-weight:900;letter-spacing:1px}
+.brand span{color:var(--gold)}
+.avatar{width:40px;height:40px;border-radius:50%;background:#263653;display:grid;place-items:center;color:var(--gold);font-weight:bold}
+.container{padding:12px 16px;max-width:650px;margin:auto}
+.welcome{color:var(--muted);font-size:13px;margin-bottom:5px}
+h2{font-size:22px;margin:5px 0 16px}
+.balance{background:linear-gradient(135deg,#253b63,#14213a 65%,#4b3515);border:1px solid #3d4d6c;border-radius:20px;padding:23px;margin-bottom:16px;position:relative;overflow:hidden}
+.balance:after{content:"◆";position:absolute;right:22px;top:20px;color:#f5bd45;font-size:42px;opacity:.25}
+.balance small{color:#c4cde0}
+.balance h1{font-size:36px;margin:12px 0 5px;color:var(--gold)}
+.balance p{font-size:12px;color:#c4cde0;margin:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid #202d44;border-radius:15px;padding:15px}
+.stat small{color:var(--muted);font-size:12px}
+.stat strong{display:block;font-size:20px;margin-top:8px}
+.section-title{font-size:17px;font-weight:bold;margin:22px 0 12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.action{background:var(--panel);border:1px solid #26344d;border-radius:14px;padding:17px 12px;color:white;text-align:left}
+.action b{display:block;margin-top:10px;font-size:14px}
+.action span{font-size:22px}
+.card{background:var(--panel);border:1px solid #243149;border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:16px}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.btn{background:var(--gold);color:#15100a;padding:13px 16px;border-radius:11px;font-weight:bold;width:100%;margin-top:12px}
+.btn.secondary{background:#263754;color:white}
+.btn.danger{background:#542635;color:#fff}
+.btn.green{background:#174c3d;color:#fff}
+input{width:100%;padding:14px;border-radius:10px;border:1px solid #34445e;background:#0c1424;color:white;outline:none;margin:7px 0}
+input:focus{border-color:var(--gold)}
+label{font-size:12px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row button{width:auto;margin:0}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#10192a;border-top:1px solid #26344d;display:flex;justify-content:space-around;padding:10px 3px calc(10px + env(safe-area-inset-bottom));z-index:5}
+.nav button{background:none;color:#8795ad;font-size:10px;padding:5px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.nav button span{font-size:19px}
+.nav button.active{color:var(--gold)}
+.page{display:none}
+.page.active{display:block}
+.notice{padding:12px;border-radius:10px;background:#18253a;color:#cbd5e8;font-size:12px;margin-bottom:12px}
+.status{font-size:11px;padding:5px 9px;border-radius:20px;background:#293650;color:#d9e3f6}
+.status.pending{color:#ffd477}
+.status.approved{color:#8cc6ff}
+.status.paid{color:#51e5ad}
+.status.rejected{color:#ff8792}
+.task-link{color:var(--gold);text-decoration:none;font-size:13px}
+.hidden{display:none!important}
+.empty{text-align:center;padding:28px;color:var(--muted);font-size:13px}
+hr{border:0;border-top:1px solid #26344a;margin:14px 0}
+.small-btn{background:#293954;color:white;padding:9px 12px;border-radius:9px;font-size:12px}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#263650;color:white;padding:12px 18px;border-radius:10px;font-size:13px;z-index:10;display:none;max-width:90%;text-align:center}
+.loading{text-align:center;padding:35px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand" id="botName">BNB X <span>GEMS</span></div>
+  <div class="avatar" id="avatar">G</div>
+</header>
+
+<main class="container">
+  <div id="loading" class="loading">Connecting to BNB X GEMS...</div>
+
+  <div id="app" class="hidden">
+
+    <section class="page active" id="home">
+      <div class="welcome">Welcome back,</div>
+      <h2 id="userName">GEMS Member</h2>
+
+      <div class="balance">
+        <small>YOUR TOTAL BALANCE</small>
+        <h1 id="balance">0 GEMS</h1>
+        <p>Earn GEMS and request manual withdrawals</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <small>Total referrals</small>
+          <strong id="refCount">0</strong>
+        </div>
+        <div class="stat">
+          <small>Total withdrawn</small>
+          <strong id="withdrawn">0 GEMS</strong>
+        </div>
+      </div>
+
+      <div class="section-title">Quick Actions</div>
+      <div class="actions">
+        <button class="action" onclick="showPage('tasks')"><span>🎯</span><b>Earn GEMS</b></button>
+        <button class="action" onclick="showPage('referrals')"><span>👥</span><b>Invite Friends</b></button>
+        <button class="action" onclick="showPage('wallet')"><span>👛</span><b>My Wallet</b></button>
+        <button class="action" onclick="showPage('withdraw')"><span>💎</span><b>Withdraw</b></button>
+      </div>
+
+      <div class="section-title">Account Information</div>
+      <div class="card">
+        <div class="row"><span class="muted">Telegram ID</span><b id="telegramId">-</b></div>
+        <hr>
+        <div class="row"><span class="muted">Wallet status</span><b id="walletStatus">Not set</b></div>
+      </div>
+    </section>
+
+    <section class="page" id="tasks">
+      <h2>🎯 Earn GEMS</h2>
+      <p class="muted">Complete available tasks to earn rewards.</p>
+      <div id="taskList"><div class="empty">Loading tasks...</div></div>
+    </section>
+
+    <section class="page" id="referrals">
+      <h2>👥 Invite Friends</h2>
+      <div class="card">
+        <h3>Referral Program</h3>
+        <p class="muted">Invite friends using your referral link. Earn rewards when eligible referrals join.</p>
+        <div class="stats">
+          <div class="stat"><small>Your referrals</small><strong id="refTotal">0</strong></div>
+          <div class="stat"><small>Referral earnings</small><strong id="refEarnings">0</strong></div>
+        </div>
+        <label>Your referral link</label>
+        <input id="refLink" readonly placeholder="Loading referral link...">
+        <button class="btn" onclick="copyReferral()">📋 Copy Referral Link</button>
+        <button class="btn secondary" onclick="shareReferral()">Share with Friends</button>
+      </div>
+    </section>
+
+    <section class="page" id="wallet">
+      <h2>👛 My Wallet</h2>
+      <div class="card">
+        <h3>Set your payout wallet</h3>
+        <p class="muted">Enter the wallet address where you want to receive manual payments. Check your address carefully.</p>
+        <label>Wallet address</label>
+        <input id="walletInput" placeholder="Enter your wallet address">
+        <button class="btn" onclick="saveWallet()">Save Wallet</button>
+      </div>
+    </section>
+
+    <section class="page" id="withdraw">
+      <h2>💎 Withdraw GEMS</h2>
+      <div class="card">
+        <div class="row"><span class="muted">Available balance</span><b id="withdrawBalance">0 GEMS</b></div>
+        <hr>
+        <label>Withdrawal amount</label>
+        <input id="withdrawAmount" type="number" min="1" placeholder="Enter amount">
+        <div class="notice" id="withdrawRules">Withdrawal limits are set by the administrator.</div>
+        <button class="btn" onclick="requestWithdrawal()">Submit Withdrawal Request</button>
+      </div>
+      <div class="section-title">Withdrawal History</div>
+      <div id="withdrawHistory"><div class="empty">Loading history...</div></div>
+    </section>
+
+    <section class="page" id="admin">
+      <h2>⚙️ Admin Panel</h2>
+      <div class="notice">Administrator controls. Changes are saved to your backend.</div>
+
+      <div class="section-title">Overview</div>
+      <div class="stats">
+        <div class="stat"><small>Total users</small><strong id="adminUsers">0</strong></div>
+        <div class="stat"><small>Total tasks</small><strong id="adminTasks">0</strong></div>
+        <div class="stat"><small>Pending withdrawals</small><strong id="adminPending">0</strong></div>
+        <div class="stat"><small>Total GEMS</small><strong id="adminGems">0</strong></div>
+      </div>
+
+      <div class="section-title">Create Task</div>
+      <div class="card">
+        <label>Task title</label>
+        <input id="taskTitle" placeholder="Example: Join our Telegram channel">
+        <label>Description</label>
+        <input id="taskDescription" placeholder="Task instructions">
+        <label>Task link</label>
+        <input id="taskLink" placeholder="https://t.me/example">
+        <label>Reward (GEMS)</label>
+        <input id="taskReward" type="number" placeholder="10">
+        <button class="btn" onclick="createTask()">Create Task</button>
+      </div>
+
+      <div class="section-title">Manage Settings</div>
+      <div class="card">
+        <label>Task reward</label>
+        <input id="settingTaskReward" type="number">
+        <label>Referral reward</label>
+        <input id="settingReferralReward" type="number">
+        <label>Bonus reward setting</label>
+        <input id="settingBonusReward" type="number">
+        <label>Minimum withdrawal</label>
+        <input id="settingMinimum" type="number">
+        <label>Maximum withdrawal</label>
+        <input id="settingMaximum" type="number">
+        <label>Withdrawal fee</label>
+        <input id="settingFee" type="number">
+        <button class="btn" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+      <div class="section-title">Give User Bonus</div>
+      <div class="card">
+        <label>Telegram user ID</label>
+        <input id="bonusUser" placeholder="User ID">
+        <label>Bonus amount</label>
+        <input id="bonusAmount" type="number" placeholder="Amount">
+        <button class="btn" onclick="giveBonus()">Send Bonus</button>
+      </div>
+
+      <div class="section-title">Withdrawal Requests</div>
+      <div id="adminWithdrawalList"><div class="empty">Loading...</div></div>
+
+      <div class="section-title">Registered Users</div>
+      <div id="adminUserList"><div class="empty">Loading...</div></div>
+    </section>
+
+  </div>
+</main>
+
+<nav class="nav hidden" id="nav">
+  <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Home</button>
+  <button data-page="tasks" onclick="showPage('tasks')"><span>🎯</span>Tasks</button>
+  <button data-page="referrals" onclick="showPage('referrals')"><span>👥</span>Invite</button>
+  <button data-page="withdraw" onclick="showPage('withdraw')"><span>💎</span>Withdraw</button>
+  <button data-page="wallet" onclick="showPage('wallet')"><span>👛</span>Wallet</button>
+  <button id="adminNav" class="hidden" data-page="admin" onclick="showPage('admin')"><span>⚙️</span>Admin</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+const API = "https://bnb-x-gems-api.onrender.com";
+const tg = window.Telegram && window.Telegram.WebApp;
+let me = null;
+let settings = {};
+let referralData = {};
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  try { tg.setHeaderColor("#080d19"); tg.setBackgroundColor("#080d19"); } catch(e) {}
+}
+
+function toast(message) {
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.style.display = "block";
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => el.style.display = "none", 3000);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function format(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+async function api(path, method="GET", body=null) {
+  if (!tg || !tg.initData) {
+    throw new Error("Please open this Mini App through your Telegram bot.");
+  }
+
+  const options = {
+    method,
+    headers: {
+      "Content-Type":"application/json",
+      "X-Telegram-Init-Data":tg.initData
+    }
+  };
+
+  if (body) options.body = JSON.stringify(body);
+
+  const response = await fetch(API + path, options);
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || data.success === false) {
+    throw new Error(data.error || data.message || "Something went wrong.");
+  }
+
+  return data;
+}
+
+async function startApp() {
+  try {
+    const data = await api("/api/me");
+    me = data.user;
+    settings = data.settings || {};
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    document.getElementById("nav").classList.remove("hidden");
+
+    const name = me.firstName || "GEMS Member";
+    document.getElementById("userName").textContent = name;
+    document.getElementById("avatar").textContent = name.charAt(0).toUpperCase();
+    document.getElementById("telegramId").textContent = me.id;
+    document.getElementById("botName").textContent = data.bot?.name || "BNB X GEMS";
+
+    document.getElementById("balance").textContent = format(me.balance) + " GEMS";
+    document.getElementById("withdrawn").textContent = format(me.totalWithdrawn) + " GEMS";
+    document.getElementById("withdrawBalance").textContent = format(me.balance) + " GEMS";
+    document.getElementById("walletStatus").textContent = me.wallet ? "Saved ✓" : "Not set";
+    document.getElementById("walletInput").value = me.wallet || "";
+    document.getElementById("refCount").textContent = (me.referrals || []).length;
+
+    if (data.isAdmin) {
+      document.getElementById("adminNav").classList.remove("hidden");
+      loadAdmin();
+    }
+
+    updateWithdrawRules();
+    await Promise.all([loadTasks(), loadReferrals(), loadWithdrawals()]);
+  } catch(error) {
+    document.getElementById("loading").innerHTML =
+      '<div class="card"><h3>Unable to connect</h3><p class="muted">' +
+      escapeHTML(error.message) +
+      '</p><button class="btn" onclick="location.reload()">Try Again</button></div>';
+  }
+}
+
+function showPage(page) {
+  document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+
+  document.querySelectorAll(".nav button").forEach(el => {
+    el.classList.toggle("active", el.dataset.page === page);
+  });
+
+  if (page === "withdraw") loadWithdrawals();
+  if (page === "admin") loadAdmin();
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+  window.scrollTo(0,0);
+}
+
+function updateWithdrawRules() {
+  const min = settings.minimumWithdraw ?? 100;
+  const max = settings.maximumWithdraw ?? 10000;
+  const fee = settings.withdrawalFee ?? 0;
+
+  document.getElementById("withdrawRules").textContent =
+    `Minimum: ${format(min)} GEMS | Maximum: ${format(max)} GEMS | Fee: ${format(fee)} GEMS`;
+}
+
+async function loadTasks() {
+  try {
+    const data = await api("/api/tasks");
+    const list = document.getElementById("taskList");
+
+    if (!data.tasks || !data.tasks.length) {
+      list.innerHTML = '<div class="empty">No tasks available right now.</div>';
+      return;
+    }
+
+    list.innerHTML = data.tasks.map(task => `
+      <div class="card">
+        <div class="row">
+          <h3>${escapeHTML(task.title)}</h3>
+          <span class="status">${format(task.reward)} GEMS</span>
+        </div>
+        <p class="muted">${escapeHTML(task.description || "Complete this task to earn GEMS.")}</p>
+        <a class="task-link" href="${escapeHTML(task.link)}" target="_blank" rel="noopener">Open Task ↗</a>
+        <button class="btn ${task.completed ? "secondary" : ""}"
+          ${task.completed ? "disabled" : ""}
+          onclick="claimTask('${escapeHTML(task.id)}')">
+          ${task.completed ? "Already Claimed ✓" : "Claim Reward"}
+        </button>
+      </div>
+    `).join("");
+  } catch(error) {
+    document.getElementById("taskList").innerHTML =
+      `<div class="empty">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function claimTask(id) {
+  try {
+    await api("/api/tasks/" + encodeURIComponent(id) + "/claim", "POST", {});
+    toast("Task reward added!");
+    await refreshUser();
+    loadTasks();
+  } catch(error) {
+    toast(error.message);
+  }
+}
+
+async function loadReferrals() {
+  try {
+    referralData = await api("/api/referrals");
+    document.getElementById("refTotal").textContent = format(referralData.referrals);
+    document.getElementById("refCount").textContent = format(referralData.referrals);
+    document.getElementById("refEarnings").textContent = format(referralData.earnings) + " GEMS";
+    document.getElementById("refLink").value = referralData.referralLink || "";
+  } catch(error) {
+    console.error(error);
+  }
+}
+
+async function copyReferral() {
+  const link = document.getElementById("refLink").value;
+  if (!link) return toast("Referral link is not available yet.");
+
+  try {
+    await navigator.clipboard.writeText(link);
+    toast("Referral link copied!");
+  } catch(error) {
+    document.getElementById("refLink").select();
+    toast("Select and copy your referral link.");
+  }
+}
+
+function shareReferral() {
+  const link = document.getElementById("refLink").value;
+  if (!link) return toast("Referral link is not available yet.");
+
+  const text = encodeURIComponent("Join me on BNB X GEMS and start earning GEMS!");
+  const url = encodeURIComponent(link);
+  if (tg && tg.openTelegramLink) {
+    tg.openTelegramLink("https://t.me/share/url?url=" + url + "&text=" + text);
+  } else {
+    window.open("https://t.me/share/url?url=" + url + "&text=" + text, "_blank");
+  }
+}
+
+async function saveWallet() {
+  const wallet = document.getElementById("walletInput").value.trim();
+  if (wallet.length < 10) return toast("Enter a valid wallet address.");
+
+  try {
+    await api("/api/wallet", "POST", {wallet});
+    me.wallet = wallet;
+    document.getElementById("walletStatus").textContent = "Saved ✓";
+    toast("Wallet saved successfully!");
+  } catch(error) {
+    toast(error.message);
+  }
+}
+
+async function requestWithdrawal() {
+  const amount = Number(document.getElementById("withdrawAmount").value);
+  if (!amount || amount <= 0) return toast("Enter a valid amount.");
+
+  if (!confirm("Submit a withdrawal request for " + format(amount) + " GEMS?")) return;
+
+  try {
+    const data = await api("/api/withdraw", "POST", {amount});
+    document.getElementById("withdrawAmount").value = "";
+    toast(data.message || "Withdrawal request submitted.");
+    await refreshUser();
+    loadWithdrawals();
+  } catch(error) {
+    toast(error.message);
+  }
+}
+
+async function loadWithdrawals() {
+  try {
+    const data = await api("/api/withdrawals");
+    const list = document.getElementById("withdrawHistory");
+
+    if (!data.withdrawals || !data.withdrawals.length) {
+      list.innerHTML = '<div class="empty">No withdrawal requests yet.</div>';
+      return;
+    }
+
+    list.innerHTML = data.withdrawals.map(w => `
+      <div class="card">
+        <div class="row">
+          <b>${format(w.amount)} GEMS</b>
+          <span class="status ${escapeHTML(w.status)}">${escapeHTML(w.status)}</span>
+        </div>
+        <p class="muted">Date: ${new Date(w.createdAt).toLocaleString()}</p>
+        ${w.transactionHash ? `<p class="muted">Transaction: ${escapeHTML(w.transactionHash)}</p>` : ""}
+      </div>
+    `).join("");
+  } catch(error) {
+    document.getElementById("withdrawHistory").innerHTML =
+      `<div class="empty">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function refreshUser() {
+  const data = await api("/api/m
